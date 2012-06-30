@@ -1,11 +1,15 @@
 <?php
 
-	echo 'TESTTESTTEST';
+include 'lib\LoginController.inc';
 
-	//if(LoginController::login($_POST['username'],$_POST['password']))
-	//{
-	//
-	//	echo 'Success';	
-	//
-	//}
+	$username = isset($_POST['username']) ? $_POST['username'] : '';
+	$password = isset($_POST['password']) ? $_POST['password'] : ''; 
+	
+
+	if(LoginController::login($username, $password))
+	{
+	
+		echo 'Success';	
+	
+	}
 ?>

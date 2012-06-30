@@ -3,7 +3,7 @@
 class LoginController
 {
 
-    public static function login($username, $password)
+    public static function login($_username, $_password)
     {
 
         //connect to the database here
@@ -26,7 +26,7 @@ class LoginController
         else
         {*/
 
-            this::validateUser($username);
+            LoginController::validateUser($_username);
 			
 			return true;
         /*}*/
