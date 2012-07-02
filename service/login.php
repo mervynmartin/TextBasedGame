@@ -1,5 +1,7 @@
 <?php
 
+header('Content-type: application/json');
+
 include 'lib\LoginController.inc';
 
 	$username = isset($_POST['username']) ? $_POST['username'] : '';
@@ -9,7 +11,7 @@ include 'lib\LoginController.inc';
 	if(LoginController::login($username, $password))
 	{
 	
-		echo 'Success';	
+		echo '[{"loginSuccessful": true}]';	
 	
 	}
 ?>
