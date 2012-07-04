@@ -29,7 +29,7 @@
 								url: serviceUrl + "login.php",
 								type: "POST",
 								dataType: "json",
-								data: {username: $("#username").val(), password: $("password").val()},
+								data: {username: $("#username").val(), password: $("#password").val()},
 								success: function(obj){
 									$.each(obj, function(){
 										if(this['loginSuccessful'] == 1)

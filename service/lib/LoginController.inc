@@ -35,14 +35,14 @@ class LoginController
 		
 		$hash = hash('sha256', $salt . $_password . $salt);
 		
-		if($hash != $db_hash)
-		{
-		    return false;
-		}
-		else
+		if($hash == $db_hash)
 		{
 		    LoginController::validateUser($_username);	
 			return true;
+		}
+		else
+		{
+		    return false;
 		}
 		return false;
 		
