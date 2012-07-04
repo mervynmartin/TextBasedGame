@@ -10,8 +10,10 @@ include 'lib\LoginController.inc';
 
 	if(LoginController::login($username, $password))
 	{
-	
-		echo '[{"loginSuccessful": true}]';	
-	
+		echo '[{"loginSuccessful": 1}]';	
+	}
+	else
+	{
+		echo '[{"loginSuccessful": 0}]';			
 	}
 ?>

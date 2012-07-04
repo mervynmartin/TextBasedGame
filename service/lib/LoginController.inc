@@ -5,32 +5,49 @@ class LoginController
 
     public static function login($_username, $_password)
     {
+		$mysqli = new mysqli("localhost", "webapp", "Ppabew!", "ffe");
 
-        //connect to the database here
-        /*$username = mysql_real_escape_string($username);
-        $query = "SELECT password, salt
-                  FROM users
-                  WHERE username = '$username';";
-
-        $result = mysql_query($query);
-        if(mysql_num_rows($result) < 1) //no such user exists
-        {
-            return false;
-        }
-        $userData = mysql_fetch_array($result, MYSQL_ASSOC);
-        $hash = hash('sha256', $userData['salt'] . hash('sha256', $password) );
-        if($hash != $userData['password'])
-        {
-            return false;
-        }
-        else
-        {*/
-
-            LoginController::validateUser($_username);
+		$salt = "test";
+		
+		if (mysqli_connect_errno()) {
+    		exit();
+		}
 			
-			return true;
-        /*}*/
+		//connect to the database here
+		//$username = mysql_real_escape_string($_username);
+		$stmt = $mysqli->prepare("SELECT hash
+		          FROM user
+		          WHERE username = ?");
+				  
+		$stmt->bind_param('s', $_username);
+		
+		$stmt->execute();
+		$stmt->bind_result($db_hash);
+		$stmt->fetch();
+		/*
+		$result = $stmt->get_result();
+		
 
+		if($result->num_rows < 1) //no such user exists
+		{
+		    return false;
+		}*/
+		
+		$hash = hash('sha256', $salt . $_password . $salt);
+		
+		if($hash != $db_hash)
+		{
+		    return false;
+		}
+		else
+		{
+		    LoginController::validateUser($_username);	
+			return true;
+		}
+		return false;
+		
+		$stmt->close();
+		$mysqli->close();
 
     }
 

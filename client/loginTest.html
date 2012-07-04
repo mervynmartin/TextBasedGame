@@ -22,22 +22,29 @@
 			$(function(){
 						
 				$("#loginDialog").dialog({
-					width: 600,
+					width: 400,
 					buttons: {
 						"OK": function() {
 							$.ajax({
 								url: serviceUrl + "login.php",
-								type: "GET",
+								type: "POST",
 								dataType: "json",
-								success: function(){
-									alert("Login Successful");
+								data: {username: $("#username").val(), password: $("password").val()},
+								success: function(obj){
+									$.each(obj, function(){
+										if(this['loginSuccessful'] == 1)
+										{
+											alert("Login Successful");	
+										}	
+										else
+										{
+											alert("Login Failed");
+										}								
+									});
 									$(this).dialog("close");										
 								},
 								error: function(xhr,status, err){
-									alert("something done fucked up");
-									alert(xhr);
-									alert(status);
-									alert(err);									
+									alert("something done fucked up");								
 								}
 							});
 							$(this).dialog("close");
