@@ -1,5 +1,8 @@
 <?php
 
+include classes.inc;
+
+
 class RestUtils
 {
 	public static function processRequest()
