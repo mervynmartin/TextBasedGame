@@ -1,6 +1,7 @@
 <?php
 
 include classes.inc;
+include LoginController.inc;
 
 
 class RestUtils
@@ -47,11 +48,6 @@ class RestUtils
 			$return_obj->setData(json_decode($data['data']));
 		}
 		return $return_obj;
-	}
-
-	public static function sendResponse($status = 200, $body = '', $content_type = 'text/html')
-	{
-
 	}
 
 	public static function getStatusCodeMessage($status)
@@ -108,6 +104,48 @@ class RestUtils
 }
 
 
+Class ApplicationConfig
+{
+			
+	public static function getDefaultValue($_key)
+	{
+		switch($_key)
+		{
+			case 'content_type':
+				return 'text/json';
+				break;
+		}
+		 
+	}
+}
+
+class RestResponse
+{
+	private $status;
+	private $body;
+	private $content_type;
+	
+	public function __construct()
+	{
+		$this->status		= 200;
+		$this->body			= RestUtils::getStatusCodeMessage($this->status);
+		$this->content_type	= ApplicationConfig::getDefaultValue('content_type');
+	}
+
+	public function setBody($_body)
+	{
+		$this->body = '$_body';
+	}
+	
+	public function setStatus($_status)
+	{
+		$this->status = $_status;
+		$this->body = RestUtils::getStatusCodeMessage($this->status);		
+	}
+	
+}
+
+
 class RestRequest
 {
 	private $request_vars;
@@ -158,6 +196,114 @@ class RestRequest
 		return $this->request_vars;
 	}
 }
+
+
+Class Routes 
+{
+	
+	function routeRequest()
+	{
+		
+		$restRequest	= new RestRequest();
+		$data			= array();
+		
+		$allOk = true;
+		$evalService = '';
+		$evalMethod = '';
+		
+		
+		
+		
+		$service = '';
+		
+		switch($service)
+		{
+			case 'character':
+				$evalService = 'Character';
+				break;
+			default:
+				$allOk = false;
+				$responseStatus = 404; //not found
+				exit();
+				break;
+		}
+
+
+		
+		$requestMethod = strtolower($_SERVER['REQUEST_METHOD']);
+		
+		switch($requestMethod)
+		{
+			case 'get':
+				$data = $_GET;
+				$evalMethod = 'get';
+				break;
+			case 'post':
+				$data = $_POST;
+				$evalMethod = 'post';
+				break;
+			case 'put':
+				// basically, we read a string from PHP's special input location,
+				// and then parse it out into an array via parse_str... per the PHP docs:
+				// Parses str  as if it were the query string passed via a URL and sets
+				// variables in the current scope.
+				parse_str(file_get_contents('php://input'), $put_vars);
+				$data = $put_vars;
+				$evalMethod = 'put';
+				break;
+			case 'delete':
+				$evalMethod = 'delete';
+				break;
+			case 'default':
+				$allOk = false;
+				$responseStatus = 400; //bad request
+				exit();
+				break;
+		}
+		
+		$restRequest->setMethod($request_method);
+		$restRequest->setRequestVars($data);
+
+		if(isset($data['data']))
+		{
+			$restRequest->setData(json_decode($data['data']));
+		}
+
+		
+		if ($allOk)
+		{
+			if(!LoginController::checkLogin())
+			{
+				sendResponse(401); //not authorized
+				exit();
+			}
+			$serviceMethod = $evalMethod . $evalService;
+			
+			call_user_func($serviceMethod, $restRequest);		
+		}
+		else
+		{
+			$restRepsonse = new restReponse();
+								
+		}
+		
+	}
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
