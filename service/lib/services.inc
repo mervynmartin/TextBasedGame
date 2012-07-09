@@ -1,7 +1,9 @@
 <?php
 
-include classes.inc;
-include LoginController.inc;
+
+include "lib/classes.inc";
+
+include "lib/LoginController.inc";
 
 
 class RestUtils
@@ -104,7 +106,7 @@ class RestUtils
 }
 
 
-Class ApplicationConfig
+class ApplicationConfig
 {
 			
 	public static function getDefaultValue($_key)
@@ -134,13 +136,18 @@ class RestResponse
 
 	public function setBody($_body)
 	{
-		$this->body = '$_body';
+		$this->body = $_body;
 	}
 	
 	public function setStatus($_status)
 	{
 		$this->status = $_status;
 		$this->body = RestUtils::getStatusCodeMessage($this->status);		
+	}
+	
+	public function getJSONEncode()
+	{
+		return json_encode(get_object_vars($this));		
 	}
 	
 }
@@ -198,37 +205,22 @@ class RestRequest
 }
 
 
-Class Routes 
+class Routes 
 {
 	
-	function routeRequest()
+	public static function routeRequest()
 	{
 		
 		$restRequest	= new RestRequest();
 		$data			= array();
 		
-		$allOk = true;
-		$evalService = '';
-		$evalMethod = '';
+		$allOk 			= true;
+		$evalService 	= "";
+		$evalMethod 	= "";
+		$requestMethod 	= "";
+		$service		= "";
 		
 		
-		
-		
-		$service = '';
-		
-		switch($service)
-		{
-			case 'character':
-				$evalService = 'Character';
-				break;
-			default:
-				$allOk = false;
-				$responseStatus = 404; //not found
-				exit();
-				break;
-		}
-
-
 		
 		$requestMethod = strtolower($_SERVER['REQUEST_METHOD']);
 		
@@ -261,32 +253,58 @@ Class Routes
 				break;
 		}
 		
-		$restRequest->setMethod($request_method);
+		$restRequest->setMethod($requestMethod);
 		$restRequest->setRequestVars($data);
+		
+
 
 		if(isset($data['data']))
 		{
 			$restRequest->setData(json_decode($data['data']));
 		}
-
 		
+		if(isset($data['service']))
+		{
+			$service = $data['service'];
+		}
+		
+		
+		switch($service)
+		{
+			case 'character':
+				$evalService = 'Character';
+				break;
+			default:
+				$allOk = false;
+				$responseStatus = 404; //not found
+				exit();
+				break;
+		}
+
+		//put this back in some day when login is working correctly.
+
+		//if(!LoginController::checkLogin())
+		//{
+		//	$responseStatus = 401; //not authorized
+		//	$allOk = false;
+		//}
+	
+		$restResponse = new RestResponse();
+	
 		if ($allOk)
 		{
-			if(!LoginController::checkLogin())
-			{
-				sendResponse(401); //not authorized
-				exit();
-			}
 			$serviceMethod = $evalMethod . $evalService;
-			
-			call_user_func($serviceMethod, $restRequest);		
+			$restResponse = call_user_func("services::".$serviceMethod, $restRequest);	
 		}
 		else
 		{
-			$restRepsonse = new restReponse();
-								
+			$restResponse->setStatus($responseStatus);
 		}
 		
+		//send $restRepsonse to client
+		
+		return $restResponse->getJSONEncode();
+				
 	}
 	
 
@@ -294,13 +312,24 @@ Class Routes
 
 
 
+class services
+{
+	
+	public static function getCharacter($_restRequest)
+	{
+		
+		$id =  $_restRequest->getData()->{'id'};
+		
+		$restResponse = new RestResponse();
+		$character = new Character($id);
+		
+		$restResponse->setBody($character->getJSONEncode());
+		
+		return $restResponse;
 
-
-
-
-
-
-
+	}
+	
+}
 
 
 

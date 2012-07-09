@@ -1,0 +1,5 @@
+RewriteEngine on
+Options +FollowSymLinks
+RewriteBase /TextBasedGame/service/
+
+RewriteRule ^run/(.*) runservice.php?service=$1 [R]
