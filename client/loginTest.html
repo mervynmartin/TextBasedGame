@@ -26,21 +26,12 @@
 					buttons: {
 						"OK": function() {
 							$.ajax({
-								url: serviceUrl + "login.php",
+								url: serviceUrl + "runservice.php",
 								type: "POST",
 								dataType: "json",
-								data: {username: $("#username").val(), password: $("#password").val()},
+								data: {service: 'login', data: '{"username": "' + $("#username").val() + '", "password": "' + $("#password").val() + '"}' },
 								success: function(obj){
-									$.each(obj, function(){
-										if(this['loginSuccessful'] == 1)
-										{
-											alert("Login Successful");	
-										}	
-										else
-										{
-											alert("Login Failed");
-										}								
-									});
+									obj.body.loginSuccessful == 1 ? alert("Login Successful") : alert("Login Failed");
 									$(this).dialog("close");										
 								},
 								error: function(xhr,status, err){

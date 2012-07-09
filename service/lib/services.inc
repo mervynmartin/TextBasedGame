@@ -2,56 +2,11 @@
 
 
 include "lib/classes.inc";
-
 include "lib/LoginController.inc";
 
 
 class RestUtils
 {
-	public static function processRequest()
-	{
-		// get our verb
-		$request_method = strtolower($_SERVER['REQUEST_METHOD']);
-		$return_obj		= new RestRequest();
-		// we'll store our data here
-		$data			= array();
-
-		switch ($request_method)
-		{
-			// gets are easy...
-			case 'get':
-				$data = $_GET;
-				break;
-			// so are posts
-			case 'post':
-				$data = $_POST;
-				break;
-			// here's the tricky bit...
-			case 'put':
-				// basically, we read a string from PHP's special input location,
-				// and then parse it out into an array via parse_str... per the PHP docs:
-				// Parses str  as if it were the query string passed via a URL and sets
-				// variables in the current scope.
-				parse_str(file_get_contents('php://input'), $put_vars);
-				$data = $put_vars;
-				break;
-		}
-
-		// store the method
-		$return_obj->setMethod($request_method);
-
-		// set the raw data, so we can access it if needed (there may be
-		// other pieces to your requests)
-		$return_obj->setRequestVars($data);
-
-		if(isset($data['data']))
-		{
-			// translate the JSON to an Object for use however you want
-			$return_obj->setData(json_decode($data['data']));
-		}
-		return $return_obj;
-	}
-
 	public static function getStatusCodeMessage($status)
 	{
 		// these could be stored in a .ini file and loaded
@@ -114,7 +69,7 @@ class ApplicationConfig
 		switch($_key)
 		{
 			case 'content_type':
-				return 'text/json';
+				return 'json';
 				break;
 		}
 		 
@@ -268,18 +223,6 @@ class Routes
 			$service = $data['service'];
 		}
 		
-		
-		switch($service)
-		{
-			case 'character':
-				$evalService = 'Character';
-				break;
-			default:
-				$allOk = false;
-				$responseStatus = 404; //not found
-				exit();
-				break;
-		}
 
 		//put this back in some day when login is working correctly.
 
@@ -293,12 +236,14 @@ class Routes
 	
 		if ($allOk)
 		{
-			$serviceMethod = $evalMethod . $evalService;
-			$restResponse = call_user_func("services::".$serviceMethod, $restRequest);	
-		}
-		else
-		{
-			$restResponse->setStatus($responseStatus);
+			$serviceMethod = $evalMethod . $service;//$evalService;
+			
+			try {
+				$restResponse = call_user_func("services::".$serviceMethod, $restRequest);
+			} catch (Exception $e) {
+				$responseStatus = 404; //not found
+				$restResponse->setStatus($responseStatus);	
+			}	
 		}
 		
 		//send $restRepsonse to client
@@ -327,6 +272,36 @@ class services
 		
 		return $restResponse;
 
+	}
+	
+	public static function postLogin($_restRequest) //should be post in future
+	{
+
+		$restResponse = new RestResponse();
+		
+		$username = $_restRequest->getData()->{'username'};
+		$password = $_restRequest->getData()->{'password'};
+	
+		if(LoginController::login($username, $password))
+		{
+			$kvp = Array(
+				"loginSuccessful" => "1"
+			);
+			
+			$restResponse->setBody($kvp);	
+		}
+		else
+		{
+			$restResponse->setStatus(401);
+		}
+		
+		return $restResponse;
+	}
+	
+	public static function putLogin($_restRequest)
+	{
+		
+		
 	}
 	
 }
