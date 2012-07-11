@@ -123,6 +123,12 @@ class RestRequest
 		$this->method			= 'get';
 	}
 
+	
+	public function getJSONEncode()
+	{
+		return json_encode(get_object_vars($this));		
+	}
+
 	public function setData($data)
 	{
 		$this->data = $data;
@@ -175,8 +181,6 @@ class Routes
 		$requestMethod 	= "";
 		$service		= "";
 		
-		
-		
 		$requestMethod = strtolower($_SERVER['REQUEST_METHOD']);
 		
 		switch($requestMethod)
@@ -210,18 +214,18 @@ class Routes
 		
 		$restRequest->setMethod($requestMethod);
 		$restRequest->setRequestVars($data);
-		
-
-
 		if(isset($data['data']))
 		{
 			$restRequest->setData(json_decode($data['data']));
 		}
-		
+
+
 		if(isset($data['service']))
 		{
 			$service = $data['service'];
 		}
+		
+		
 		
 
 		//put this back in some day when login is working correctly.
@@ -233,21 +237,24 @@ class Routes
 		//}
 	
 		$restResponse = new RestResponse();
+		
 	
 		if ($allOk)
 		{
-			$serviceMethod = $evalMethod . $service;//$evalService;
+			$serviceMethod = $evalMethod . $service;
 			
-			try {
-				$restResponse = call_user_func("services::".$serviceMethod, $restRequest);
-			} catch (Exception $e) {
+			if (method_exists('services', $serviceMethod))
+			{
+				$restResponse = call_user_func("services::" . $serviceMethod, $restRequest);
+			} 
+			else
+			{
 				$responseStatus = 404; //not found
 				$restResponse->setStatus($responseStatus);	
 			}	
 		}
 		
 		//send $restRepsonse to client
-		
 		return $restResponse->getJSONEncode();
 				
 	}
@@ -262,13 +269,14 @@ class services
 	
 	public static function getCharacter($_restRequest)
 	{
-		
+
 		$id =  $_restRequest->getData()->{'id'};
 		
 		$restResponse = new RestResponse();
 		$character = new Character($id);
 		
-		$restResponse->setBody($character->getJSONEncode());
+		
+		$restResponse->setBody($character);
 		
 		return $restResponse;
 

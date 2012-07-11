@@ -2,16 +2,16 @@
 class character
 {
 	
-	private $id;
-	private $name;
-	private $characterClass;
-	private $stat_sheet;
+	public $id;
+	public $name;
+	public $characterClass;
+	public $stat_sheet;
 	
 	public function __construct($_characterId)
 	{
-		$id = $_characterId;
-		$name = 'TITUS THE BARBARIAN';
-		$class = new characterClass(1);
+		$this->id = $_characterId;
+		$this->name = 'TITUS THE BARBARIAN';
+		$this->class = new characterClass(1);
 	}
 	
 	public function getJSONEncode()
@@ -28,7 +28,7 @@ class characterClass
 	
 	public function __construct($_classId)
 	{
-		$id = $_classId;		
+		$this->id = $_classId;		
 	}
 
 }
