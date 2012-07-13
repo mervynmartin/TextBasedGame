@@ -16,7 +16,7 @@
 		
 		<script type="text/javascript">
 			
-			var serviceUrl = "http://localhost/TextBasedGame/service/";
+			var serviceUrl = "http://localhost:81/TextBasedGame/service/";
 			
 			
 			
@@ -51,7 +51,7 @@
 	</head>
 	<body>
 		<div id="loginDialog">
-			<div style="width: 375px; display: inline-block; vertical-align: top;">
+			<div style="width: 370px; display: inline-block; vertical-align: top;">
 				<form>
 					<label class="service-label" for="service">Service:</label><br />
 					<input type="text" name="service" id="service"/ style="width: 100%"><br />
@@ -66,7 +66,7 @@
 					<textarea id="data" style="width: 100%; height:300px;"></textarea>
 				</form>
 			</div>
-			<div style="width: 375px; display: inline-block; vertical-align: top;">
+			<div style="width: 370px; display: inline-block; vertical-align: top;">
 				<label class="return-label" for="return">Results</label><br />
 				<textarea id="result" style="width:100%; height:395px;">Returned content ideally</textarea>
 			</div>

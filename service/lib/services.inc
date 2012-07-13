@@ -2,7 +2,7 @@
 
 
 include "lib/classes.inc";
-include "lib/LoginController.inc";
+include "lib/util.inc";
 
 
 class RestUtils
@@ -61,20 +61,7 @@ class RestUtils
 }
 
 
-class ApplicationConfig
-{
-			
-	public static function getDefaultValue($_key)
-	{
-		switch($_key)
-		{
-			case 'content_type':
-				return 'json';
-				break;
-		}
-		 
-	}
-}
+
 
 class RestResponse
 {
@@ -264,7 +251,7 @@ class Routes
 
 
 
-class services
+class Services
 {
 	
 	public static function getCharacter($_restRequest)
@@ -312,9 +299,81 @@ class services
 		
 	}
 	
+	public static function getChatLines($_restRequest)
+	{
+		
+		$restResponse = new RestResponse();
+		
+		$lastChatLine = $_restRequest->getData()->{'lastchatline'};
+		
+		
+		$dbcon = new DatabaseController();	
+		$mysqli = $dbcon->getDbCon();
+		
+		$stmt = $mysqli->prepare("SELECT *
+		          FROM chat
+		          WHERE id > ?");
+				  
+		$stmt->bind_param('s', $lastChatLine);
+		
+		$stmt->execute();
+		
+		//Figure this out
+		//$stmt->bind_result($db_hash);
+		//$stmt->fetch();
+		
+		
+		$chatlinecontents = new chatLineContents();
+		$chatlinecontents->id = 1;
+		$chatlinecontents->user = "Mervyn";
+		$chatlinecontents->message = "This is a test message";
+		
+		$chatline = new chatline();
+		$chatline->chatLineContents = $chatlinecontents;
+
+		
+		$restResponse->setBody($chatline);
+		
+		return $restResponse;
+		
+	}
+	
+	public static function putChatLine($_restRequest)
+	{
+		
+		$restResponse = new RestResponse();
+		
+		if(LoginController::checkLogin())
+		{
+			
+			$dbcon = new DatabaseController();	
+			$mysqli = $dbcon->getDbCon();
+			
+			//logic for inserting new chatline
+			
+		}
+		
+	}
+	
 }
 
 
+class chatLine
+{
+	public $chatLineContents;
+	
+	function __construct()
+	{
+		$chatLineContents = new chatLineContents();
+	}
+}
+
+class chatLineContents
+{
+	public $id;
+	public $user;
+	public $message;
+}
 
 
 

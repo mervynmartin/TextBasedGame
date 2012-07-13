@@ -1,18 +1,46 @@
 <?php
 
+class DatabaseController
+{
+	
+	private $server;
+	private $username;
+	private $password;
+	private $database;
+	
+	public function __construct()
+	{
+		$server = ApplicationConfig::getDefaultValue("db_server");
+		$username = ApplicationConfig::getDefaultValue("db_username");
+		$password = ApplicationConfig::getDefaultValue("db_password");
+		$database = ApplicationConfig::getDefaultValue("db_name");		
+	} 
+	
+	public function getDbCon()
+	{
+		$mysqli = new mysqli("localhost", "webapp", "Ppabew!", "ffe");
+		
+		if (mysqli_connect_errno()) {
+    		exit();
+		}
+	}
+	
+	
+	
+}
+
+
 class LoginController
 {
 
     public static function login($_username, $_password)
     {
-		$mysqli = new mysqli("localhost", "webapp", "Ppabew!", "ffe");
-
-		$salt = "test";
 		
-		if (mysqli_connect_errno()) {
-    		exit();
-		}
-			
+		$dbcon = new DatabaseController();	
+		$mysqli = $dbcon->getDbCon();	
+		
+		$salt = "test";	
+		
 		//connect to the database here
 		//$username = mysql_real_escape_string($_username);
 		$stmt = $mysqli->prepare("SELECT hash
@@ -74,3 +102,33 @@ class LoginController
 
 
 }
+
+
+class ApplicationConfig
+{
+			
+	public static function getDefaultValue($_key)
+	{
+		switch($_key)
+		{
+			case 'content_type':
+				return 'json';
+				break;
+			case 'db_server':
+				return 'localhost';
+				break;
+			case 'db_user':
+				return 'webapp';
+				break;
+			case 'db_password':
+				return 'Ppabew!';
+				break;
+			case 'db_name':
+				return 'ffe';
+				break;
+		}
+		 
+	}
+}
+
+?>
