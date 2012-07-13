@@ -1,6 +1,0 @@
-{
-    "require": {
-        "peej/tonic": "dev-master",
-	"pimple/pimple": "dev-master"
-    }
-}
