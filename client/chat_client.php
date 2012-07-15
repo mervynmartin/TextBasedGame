@@ -5,7 +5,7 @@
 
 		<style type="text/css">
 			
-			.chat-content-line { width: 100%; border: 1px solid black; }
+			.chat-content-line { width: 100%; }
 			
 		</style>
 
@@ -48,6 +48,7 @@
 							$("#chat-content").append(
 								$(document.createElement("div")).addClass("chat-content-line").text(lineformat)															
 							);
+							scrollBottom();
 						}	
 					});
 				}
@@ -64,6 +65,13 @@
 						error: function (xhr, status, err) { alert("could not send message"); }
 					})
 				}
+				
+				
+				function scrollBottom()
+				{
+					$("#chat-content").animate({ scrollTop: $("#chat-content").prop("scrollHeight") - $('#chat-content').height() }, 3000);
+				}
+				
 			
 				$("#chat-input-form").submit(function(e){
 					e.preventDefault();
@@ -98,6 +106,8 @@
 					}
 				});	
 				
+				
+				$("#chat-tabs").tabs().find(".ui-tabs-nav").sortable({ axis: "x" });
 			
 			
 			});
@@ -117,13 +127,25 @@
 			</form>
 		</div>
 
-
-		<div style="position: fixed; top: 1%; width: 99%; height:93%; border: 1px solid black;">
-			<div id="chat-content" style="position: absolute; bottom: 0; width: 100%;">
+		<div id="chat-tabs">
+			<ul>
+				<li><a href="#chat-main">Main</a></li>
+			</ul>
+			
+			<div id="chat-main" style="">
+				<div id="chat-set" style="height: 80%; width: 100%; overflow-y: scroll;">
+					<div id="chat-content" style="position: relative; bottom: 0;">
+					</div>
+				</div>
 			</div>
+			
+			
+			<!--div style="position: fixed; top: 1%; width: 99%; height:93%; border: 1px solid black;"-->
+			<!--/div-->
+
 		</div>
 
-		<div id="chat-bar" style="position:fixed; bottom: 0; width: 100%; height: 6%;">
+		<div id="chat-bar" style="position:fixed; bottom: 0; width: 100%; height: 40px;">
 			<form id="chat-input-form">
 				<table style="width: 99%">
 					<tr>
@@ -137,6 +159,8 @@
 				</table>
 			</form>
 		</div>
+		
+
 
 		
 	</body>
