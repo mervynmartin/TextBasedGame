@@ -87,6 +87,11 @@ class RestResponse
 		$this->body = RestUtils::getStatusCodeMessage($this->status);		
 	}
 	
+	public function getStatus()
+	{
+		return $this->status;		
+	}
+	
 	public function getJSONEncode()
 	{
 		return json_encode(get_object_vars($this));		
@@ -160,6 +165,7 @@ class Routes
 	{
 		
 		$restRequest	= new RestRequest();
+		$restResponse 	= new RestResponse();
 		$data			= array();
 		
 		$allOk 			= true;
@@ -219,19 +225,18 @@ class Routes
 
 		//if(!LoginController::checkLogin())
 		//{
-		//	$responseStatus = 401; //not authorized
+		//	$restResponse->setStatus(401); //not authorized
 		//	$allOk = false;
 		//}
 	
-		$restResponse = new RestResponse();
-		
-	
+
 		if ($allOk)
 		{
 			$serviceMethod = $evalMethod . $service;
 			
 			if (method_exists('services', $serviceMethod))
 			{
+				
 				$restResponse = call_user_func("services::" . $serviceMethod, $restRequest);
 			} 
 			else
@@ -242,7 +247,7 @@ class Routes
 		}
 		
 		//send $restRepsonse to client
-		return $restResponse->getJSONEncode();
+		return $restResponse;
 				
 	}
 	
@@ -296,6 +301,26 @@ class Services
 	public static function putLogin($_restRequest)
 	{
 		
+		$restResponse = new RestResponse();	
+		
+		session_start();
+		$username = $_restRequest->getData()->{'username'};
+		$password = $_restRequest->getData()->{'password'};
+		$hash = hash('sha256', ApplicationConfig::getDefaultValue("salt") . $password . ApplicationConfig::getDefaultValue("salt")); 
+
+		$dbh = new PDO("mysql:host=". ApplicationConfig::getDefaultValue("db_server").";".
+						 "dbname=". ApplicationConfig::getDefaultValue("db_name"), 
+						 ApplicationConfig::getDefaultValue("db_user"), 
+						 ApplicationConfig::getDefaultValue("db_password"));
+        $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		
+		$stmt = $dbh->prepare("INSERT INTO user (username, hash) VALUES (:username, :hash)");
+		$stmt->bindParam(":username", $username, PDO::PARAM_STR);
+		$stmt->bindParam(":hash", $hash, PDO::PARAM_STR);
+		
+		$stmt->execute();
+		
+		return $restResponse;
 		
 	}
 	
@@ -306,52 +331,90 @@ class Services
 		
 		$lastChatLine = $_restRequest->getData()->{'lastchatline'};
 		
+		$chatlineCollection = Array();				
 		
-		$dbcon = new DatabaseController();	
-		$mysqli = $dbcon->getDbCon();
-		
-		$stmt = $mysqli->prepare("SELECT *
-		          FROM chat
-		          WHERE id > ?");
-				  
-		$stmt->bind_param('s', $lastChatLine);
-		
-		$stmt->execute();
-		
-		//Figure this out
-		//$stmt->bind_result($db_hash);
-		//$stmt->fetch();
-		
-		
-		$chatlinecontents = new chatLineContents();
-		$chatlinecontents->id = 1;
-		$chatlinecontents->user = "Mervyn";
-		$chatlinecontents->message = "This is a test message";
-		
-		$chatline = new chatline();
-		$chatline->chatLineContents = $chatlinecontents;
+		try
+		{
 
+			$dbh = new PDO("mysql:host=". ApplicationConfig::getDefaultValue("db_server").";".
+            							 "dbname=". ApplicationConfig::getDefaultValue("db_name"), 
+										 ApplicationConfig::getDefaultValue("db_user"), 
+										 ApplicationConfig::getDefaultValue("db_password"));
+            $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			$stmt = $dbh->prepare("SELECT chat.*, user.username FROM chat JOIN user ON chat.user = user.id WHERE chat.id > :id");
+			$stmt->bindParam(":id", $lastChatLine, PDO::PARAM_INT);
+			
+			$stmt->execute();
+			
+			$result = $stmt->fetchAll();
+			
+			
+			foreach($result as $row)
+			{
+				$chatlinecontents = new chatLineContents();
+				$chatlinecontents->id = $row["id"];
+				$chatlinecontents->user = $row["username"];
+				$chatlinecontents->message = $row["message"];
+				$chatlinecontents->createdate = $row["createdate"];
+			
+				$chatline = new chatline();
+				$chatline->chatLineContents = $chatlinecontents;
+				
+				array_push($chatlineCollection, $chatline);
+									
+			}
+			
+			$dbh = null;
+			
+			$restResponse->setBody($chatlineCollection);
+			
+			return $restResponse;
+
+		}
+		catch(PDOException $e)
+		{
+			$restResponse->setStatus(500);
+			$restResponse->setBody(array("error"=>$e));
+			
+			return $restResponse;
+		}
 		
-		$restResponse->setBody($chatline);
 		
-		return $restResponse;
 		
 	}
 	
-	public static function putChatLine($_restRequest)
+	public static function putChatLines($_restRequest)
 	{
 		
 		$restResponse = new RestResponse();
 		
-		if(LoginController::checkLogin())
-		{
+		//if(LoginController::checkLogin())
+		//{
+				
+			session_start();
+			$message = $_restRequest->getData()->{'message'};
+			$userid = $_SESSION["userid"]; //get user id at some point somehow
 			
-			$dbcon = new DatabaseController();	
-			$mysqli = $dbcon->getDbCon();
 			
-			//logic for inserting new chatline
+			$dbh = new PDO("mysql:host=". ApplicationConfig::getDefaultValue("db_server").";".
+							 "dbname=". ApplicationConfig::getDefaultValue("db_name"), 
+							 ApplicationConfig::getDefaultValue("db_user"), 
+							 ApplicationConfig::getDefaultValue("db_password"));
+            $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			
-		}
+			$stmt = $dbh->prepare("INSERT INTO chat (user, message) VALUES (:user, :message)");
+			$stmt->bindParam(":user", $userid, PDO::PARAM_INT);
+			$stmt->bindParam(":message", $message, PDO::PARAM_INT);
+			
+			$stmt->execute();
+			
+		//}
+		//else {
+		//	$restResponse->setStatus(401);
+		//}
+		
+		return $restResponse;
 		
 	}
 	
@@ -373,6 +436,7 @@ class chatLineContents
 	public $id;
 	public $user;
 	public $message;
+	public $createdate;
 }
 
 

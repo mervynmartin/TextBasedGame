@@ -16,27 +16,24 @@
 		
 		<script type="text/javascript">
 			
-			var serviceUrl = "http://localhost:81/TextBasedGame/service/";
+			var serviceUrl = "../service/";
 			
 			
 			
 			$(function(){
 				
+				lastChatLine = -1;
 				
-				
-				
-				checkChatLines();
-				
-				
-				
-						
 				function checkChatLines() {
 					$.ajax({
 						url: serviceUrl + "runservice.php",
-						type: $("#method").val(),
+						type: "get",
 						dataType: "json",
-						data: {service: "chatlines", data: '{"lastchatline":"1"}' },
-						success: function(obj){	processChatLines(obj.body); },
+						data: {service: "chatlines", data: '{"lastchatline":"' + lastChatLine + '"}' },
+						success: function(obj) { processChatLines(obj.body); },
+						statuscode: {
+							401: function(){ clearInterval(chatTimer); }
+						},
 						error: function(xhr,status, err){ alert("something done fucked up");}
 					});
 				}
@@ -44,15 +41,62 @@
 				function processChatLines(_obj)
 				{
 					$.each(_obj, function(i, item){
-						lineformat = item.user  + ": " + item.message;
-						$("#chat-content").append(
-							$(document.createElement("div")).addClass("chat-content-line").text(lineformat)															
-						);	
+						if(parseInt(item.chatLineContents.id) > parseInt(lastChatLine))
+						{
+							lastChatLine = parseInt(item.chatLineContents.id);
+							lineformat = item.chatLineContents.user  + ": " + item.chatLineContents.message;
+							$("#chat-content").append(
+								$(document.createElement("div")).addClass("chat-content-line").text(lineformat)															
+							);
+						}	
 					});
-					
-					
+				}
+				
+				function sendChatLine()
+				{
+					message = $("#chat-input").val();					
+					$.ajax({
+						url: serviceUrl + "runservice.php",
+						type: "put",
+						dataType: "json",
+						data: {service: "chatlines", data: '{"message":"' + message + '"}'},
+						success: function(obj) { $("#chat-input").val(""); },
+						error: function (xhr, status, err) { alert("could not send message"); }
+					})
 				}
 			
+				$("#chat-input-form").submit(function(e){
+					e.preventDefault();
+					sendChatLine();
+				});
+				
+				
+				$("#loginDialog").dialog({
+					width: 400,
+					buttons: {
+						"OK": function() {
+							$.ajax({
+								url: serviceUrl + "runservice.php",
+								type: "POST",
+								dataType: "json",
+								data: {service: 'login', data: '{"username": "' + $("#username").val() + '", "password": "' + $("#password").val() + '"}' },
+								success: function(){
+									checkChatLines();
+									chatTimer = setInterval(function(){checkChatLines()},1000);
+									$("#loginDialog").dialog("close");
+								},
+								statuscode: {
+									401: function(obj){
+										$("#login-status").text("Login Failed");
+									}
+								},
+								error: function(xhr,status, err){
+									alert("something done fucked up");								
+								}
+							});
+						},
+					}
+				});	
 				
 			
 			
@@ -63,22 +107,35 @@
 	</head>
 	<body>
 
+		<div id="loginDialog">
+			<form id="login-input-form">
+				<label class="userlogin-label" for="username">Username:</label>
+				<input type="text" name="username" id="username"/><br />
+				<label class="userlogin-label" for ="password">Password:</label>
+				<input type="password" name="password" id="password" />
+				<div id="login-status"></div>
+			</form>
+		</div>
+
+
 		<div style="position: fixed; top: 1%; width: 99%; height:93%; border: 1px solid black;">
 			<div id="chat-content" style="position: absolute; bottom: 0; width: 100%;">
 			</div>
 		</div>
 
 		<div id="chat-bar" style="position:fixed; bottom: 0; width: 100%; height: 6%;">
-			<table style="width: 99%">
-				<tr>
-					<td style="width: 90%">
-						<textarea id="chat-input" style="width: 100%; height: 100%;" ></textarea>
-					</td>
-					<td style="width: 10%">
-						<input type="button" name="chat-input" value="Send" style="height:100%; width: 100%; "/>
-					</td>
-				</tr>
-			</table>			
+			<form id="chat-input-form">
+				<table style="width: 99%">
+					<tr>
+						<td style="width: 90%">
+							<input type="text" id="chat-input" style="width: 100%; height: 100%;" />
+						</td>
+						<td style="width: 10%">
+							<input type="button" id="chat-input-send" name="chat-input-send" value="Send" style="height:100%; width: 100%; "/>
+						</td>
+					</tr>
+				</table>
+			</form>
 		</div>
 
 		

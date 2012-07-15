@@ -16,7 +16,7 @@
 		
 		<script type="text/javascript">
 			
-			var serviceUrl = "http://localhost:81/TextBasedGame/service/";
+			var serviceUrl = "http://localhost:80/TextBasedGame/service/";
 			
 			
 			

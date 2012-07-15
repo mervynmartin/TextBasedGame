@@ -1,8 +1,15 @@
 <?php
 
-	header('Content-type: application/json');
+	
 
 	include 'lib/services.inc';
-	echo Routes::routeRequest();
+	
+	$response = new RestResponse();
+	
+	$response = Routes::routeRequest();
+
+	
+	header('Content-type: application/json', true, $response->getStatus());
+	echo $response->getJSONEncode();
 
 ?>
